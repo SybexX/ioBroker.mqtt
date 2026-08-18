@@ -697,6 +697,7 @@ export default class MQTTClient {
 
                         if (this.config.ignoreNewObjects) {
                             this.adapter.log.info(`Object ${id} ignored and not created`);
+                            delete this.topic2id[topic];
                             return;
                         }
 
@@ -722,9 +723,8 @@ export default class MQTTClient {
                 const stateObj: ioBroker.StateObject = obj as ioBroker.StateObject;
 
                 if (stateObj._id === `${this.adapter.namespace}.info.connection`) {
-                    this.adapter.log.debug(
-                        `Ignore State update for ${stateObj._id} because this.adapter internal state.`,
-                    );
+                    this.adapter.log.debug(`Ignore State update for ${stateObj._id} because this.adapter internal state.`);
+                    delete this.topic2id[topic];
                     return;
                 }
 
@@ -740,6 +740,7 @@ export default class MQTTClient {
                 // @ts-expect-error file is deprecated but could happen
                 if (stateObj.common.type === 'file') {
                     this.adapter.log.warn('"file" type is deprecated. Please use "mixed" or "string" instead.');
+                    delete this.topic2id[topic];
                     return;
                 }
                 const parsedMessage = convertMessage(topic, message, this.adapter, this.config.parseCharCodes);
@@ -782,6 +783,17 @@ export default class MQTTClient {
                     stateObj.common.type = stateType;
                     this.adapter.log.debug(`Create object for topic: ${topic}[ID: ${stateObj._id}]`);
                     await this.adapter.setForeignObject(stateObj._id, stateObj);
+
+                    stateObj.common.type = stateType;
+                    this.adapter.log.debug(`Create object for topic: ${topic}[ID: ${stateObj._id}]`);
+
+                    try {
+                        await this.adapter.setForeignObject(stateObj._id, stateObj);
+                    } catch (err) {
+                        this.adapter.log.error(`Could not create object "${stateObj._id}": ${(err as Error).message}`);
+                        delete this.topic2id[topic];
+                        return;
+                    }
                 } else {
                     // expand an old version of objects
                     if (
