@@ -723,7 +723,9 @@ export default class MQTTClient {
                 const stateObj: ioBroker.StateObject = obj as ioBroker.StateObject;
 
                 if (stateObj._id === `${this.adapter.namespace}.info.connection`) {
-                    this.adapter.log.debug(`Ignore State update for ${stateObj._id} because this.adapter internal state.`,);
+                    this.adapter.log.debug(
+                        `Ignore State update for ${stateObj._id} because this.adapter internal state.`,
+                    );
                     delete this.topic2id[topic];
                     return;
                 }
@@ -790,7 +792,9 @@ export default class MQTTClient {
                     try {
                         await this.adapter.setForeignObject(stateObj._id, stateObj);
                     } catch (err) {
-                        this.adapter.log.error(`Could not create object "${stateObj._id}": ${(err as Error).message}`,);
+                        this.adapter.log.error(
+                            `Could not create object "${stateObj._id}": ${(err as Error).message}`,
+                        );
                         delete this.topic2id[topic];
                         return;
                     }
