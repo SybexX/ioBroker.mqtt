@@ -112,10 +112,20 @@ export default class MQTTClient {
     }
 
     public destroy(): void {
-        if (this.client) {
-            this.client.end();
-            this.client = null;
+        if (!this.client) {
+            return;
         }
+
+        const oldClient = this.client;
+        this.client = null;
+        this.connected = false;
+
+        void this.adapter.setState('info.connection', false, true);
+
+        // Reconnect-Timer stoppen und Socket sofort schließen.
+        oldClient.end(true, () => {
+            this.adapter.log.info(`MQTT client disconnected from ${this.config.url}`);
+        });
     }
 
     public onStateChange(id: string, state: ioBroker.State | null | undefined): void {
@@ -1035,26 +1045,16 @@ export default class MQTTClient {
                 return;
             }
             this.adapter.log.info(`Reconnected to ${this.config.url}`);
-            this.connected = true;
-            void this.adapter.setState('info.connection', this.connected, true);
         });
 
         this.client.on('error', err => {
             this.adapter.log.error(`Client error: ${err}`);
-
-            if (this.connected) {
-                this.adapter.log.info(`Disconnected from ${this.config.url}`);
-                this.connected = false;
-                void this.adapter.setState('info.connection', this.connected, true);
-            }
         });
 
         this.client.on('close', (): void => {
-            if (this.connected) {
-                this.adapter.log.info(`Disconnected from ${this.config.url}`);
-                this.connected = false;
-                void this.adapter.setState('info.connection', this.connected, true);
-            }
+            this.adapter.log.info(`Disconnected from ${this.config.url}`);
+            this.connected = false;
+            void this.adapter.setState('info.connection', this.connected, true);
         });
     }
 }
