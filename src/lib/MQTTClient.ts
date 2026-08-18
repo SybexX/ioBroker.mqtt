@@ -792,9 +792,7 @@ export default class MQTTClient {
                     try {
                         await this.adapter.setForeignObject(stateObj._id, stateObj);
                     } catch (err) {
-                        this.adapter.log.error(
-                            `Could not create object "${stateObj._id}": ${(err as Error).message}`
-                        );
+                        this.adapter.log.error(`Could not create object "${stateObj._id}": ${(err as Error).message}`);
                         delete this.topic2id[topic];
                         return;
                     }
