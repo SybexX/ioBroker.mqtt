@@ -1044,7 +1044,7 @@ export default class MQTTClient {
             if (!this.client) {
                 return;
             }
-            this.adapter.log.info(`Reconnected to ${this.config.url}`);
+            this.adapter.log.info(`Try to reconnect to ${this.config.url}`);
         });
 
         this.client.on('error', err => {
